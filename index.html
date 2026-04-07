@@ -105,7 +105,7 @@ header {
 .progress-container {
   position: absolute;
   bottom: 0; left: 0;
-  width: 100%; height: 6px;
+  width: 100%; height: 9px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   z-index: 2147483647;
@@ -275,12 +275,67 @@ header {
 <script>
   const CHANNELS = [
     { 
-      id: 2, 
+      id: 1, 
       player: "hls", 
-      name: "ESPN", 
-      url: "http://cineplus-hd.com:80/play/live.php?mac=00:1A:79:A3:BE:B0&stream=1905864&extension=m3u8", 
+      name: "Worldwide Stream", 
+      url: "https://psl.bigbaat.app/out/v1/f342445c31dd475bbf30c7304dbad14f/index.m3u8", 
       key: "null", 
       logo: "https://eapi.pcloud.com/getpubthumb?code=XZnKkvZzlzsJg3FrQLNpWbMc0YmDV3bzWWV&linkpassword=&size=2460x816&crop=0&type=auto",
+      quality: "UPTO 1080p",
+      fps: "25 FPS",
+      vpn: "Worldwide"
+    },
+{ 
+      id: 2, 
+      player: "hls", 
+      name: "Tamasha Pro English", 
+      url: "https://tencentcdn5.tamashaweb.com/v1/0196159eeff41eb4611d121c76c781/0196159f51bb1ea5064913eb2a83ea/TMSH_U1_WEB.m3u8", 
+      key: "null", 
+      logo: "https://eapi.pcloud.com/getpubthumb?code=XZe0TAZ4VUePXYN8rSafbQdahHlB5pkov5V&linkpassword=&size=1828x1828&crop=0&type=auto",
+      quality: "UPTO 1080p",
+      fps: "25 FPS",
+      vpn: "PAKISTAN"
+    },
+{ 
+      id: 2, 
+      player: "hls", 
+      name: "Tamasha Pro Urdu", 
+      url: "https://alibabacdn11.tamashaweb.com/alibaba11/alibaba11stream_alibaba-11.m3u8?aliyunols=on&lhs_playback_mode=1&lhs_start_unix_s_0=1775486400", 
+      key: "null", 
+      logo: "https://eapi.pcloud.com/getpubthumb?code=XZe0TAZ4VUePXYN8rSafbQdahHlB5pkov5V&linkpassword=&size=1828x1828&crop=0&type=auto",
+      quality: "UPTO 1080p",
+      fps: "25 FPS",
+      vpn: "PAKISTAN"
+    },
+{ 
+      id: 2, 
+      player: "clappr", 
+      name: "Ten Sports", 
+      url: "http://110.93.227.220:8080/live/Amin-Sb-zamel/Amin-Sb/2074.m3u8", 
+      key: "null", 
+      logo: "https://eapi.pcloud.com/getpubthumb?code=XZbQSwZsoPpvwKp48bVzqA3dWFkzJi7ybLX&linkpassword=undefined&size=1000x219&crop=0&type=auto",
+      quality: "UPTO 720p",
+      fps: "25 FPS",
+      vpn: "PAKISTAN"
+    },
+{ 
+      id: 2, 
+      player: "shaka", 
+      name: "ESPN", 
+      url: "https://live1-761f422bb93edb7b.fastly.foxtelgroupcdn.net.au/out/v1/adbaa04bfe5441199a037b7a78e6e62a/index.mpd", 
+      key: "4fd27d05c1bd43e88496c9c89770faaf:1b53ff84f9fefe4266920ec38376b9c1", 
+      logo: "https://images.channel5.eu/eGqxKQFYBvdaZ1gtJTHXn44tRBP25APwLvpWnRekeFAXNlW_IDQrMCNYX5qnzdAnRGfyyRXO6YRnV9j-sk3wOg.png",
+      quality: "UPTO 1080p",
+      fps: "50 FPS",
+      vpn: "AUS VPN"
+    },
+{ 
+      id: 2, 
+      player: "shaka", 
+      name: "ESPN 2", 
+      url: "https://live1-814bffb9b389f652-cf.foxtelgroupcdn.net.au/out/v1/4a34a24349314cc3a1e84ee31bf3d224/index.mpd", 
+      key: "ad04e6d2bdb54dc2a35237ab66e0f29e:78d37cc16c351190ed202758adf417f3", 
+      logo: "https://images.channel5.eu/eGqxKQFYBvdaZ1gtJTHXn44tRBP25APwLvpWnRekeFAXNlW_IDQrMCNYX5qnzdAnRGfyyRXO6YRnV9j-sk3wOg.png",
       quality: "UPTO 1080p",
       fps: "50 FPS",
       vpn: "AUS VPN"
@@ -375,10 +430,14 @@ header {
       chromeless: true,
       playback: {
         hlsjsConfig: {
-          maxBufferLength: 2,
-          maxMaxBufferLength: 5,
+          // FAST START CONFIG
           enableLowLatencyMode: true,
-          liveSyncDurationCount: 2
+          initialLiveManifestSize: 1, // Start as soon as 1 segment is found
+          liveSyncDurationCount: 2,   // Sync very close to the live edge
+          // NORMAL BUFFER CONFIG (once playing)
+          maxBufferLength: 30,        // Allows buffer to grow to 30s for stability
+          maxMaxBufferLength: 60,
+          lowLatencyMode: true
         }
       },
       events: {
@@ -391,6 +450,16 @@ header {
 
     shakaVideo = document.getElementById('shaka-video');
     shakaInstance = new shaka.Player(shakaVideo);
+    
+    // Shaka optimization for fast loading
+    shakaInstance.configure({
+      streaming: {
+        bufferingGoal: 30,           // Build a 30s buffer
+        rebufferingGoal: 0.5,        // Resume playback with only 0.5s of data
+        bufferBehind: 30,
+        lowLatencyMode: true
+      }
+    });
     
     shakaVideo.addEventListener('timeupdate', updateProgress);
     setInterval(updateProgress, 500);
@@ -479,14 +548,19 @@ header {
       clapprWrapper.style.display = 'none'; shakaWrapper.style.display = 'block';
       
       if (ch.player === "hls" && Hls.isSupported()) {
-          // Low latency HLS configuration added here
           hlsInstance = new Hls({
-              maxBufferLength: 2,          // Buffer up to 2 seconds
-              maxMaxBufferLength: 5,       // Max limit 5 seconds
-              liveSyncDurationCount: 2,    // Sync close to live edge
-              enableLowLatencyMode: true   // Force low latency logic
+              // Optimized for Instant Loading
+              enableLowLatencyMode: true,
+              initialLiveManifestSize: 1, 
+              liveSyncDuration: 2,         // Start within 2 seconds of live edge
+              maxBufferLength: 30,        // Build a strong 30s buffer once running
+              maxMaxBufferLength: 45,
+              fragLoadingMaxRetry: 10,
+              manifestLoadingMaxRetry: 10
           });
-          hlsInstance.loadSource(ch.url); hlsInstance.attachMedia(shakaVideo); hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          hlsInstance.loadSource(ch.url); 
+          hlsInstance.attachMedia(shakaVideo); 
+          hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
               hlsInstance.levels.forEach((lvl, i) => {
                   const opt = document.createElement('option');
                   opt.value = i;
@@ -539,6 +613,8 @@ header {
   }
 
   document.addEventListener('DOMContentLoaded', initPlayer);
+</script>
+
 </script>
 </body>
 </html>
