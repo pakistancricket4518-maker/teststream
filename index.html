@@ -5,14 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>CRICLOUNGE — QUALITY CONTROL</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
-
-<!-- Clappr Base -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@clappr/player@latest/dist/clappr.min.js"></script>
-
-<!-- Shaka Player Engine -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
-
-<!-- HLS.js Engine -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
@@ -85,7 +79,6 @@ header {
   justify-content: center;
 }
 
-/* Aspect Ratio Fixes */
 .clappr-stretch video { object-fit: fill !important; }
 .clappr-zoom video { object-fit: cover !important; }
 .clappr-padded video { transform: scale(0.9); }
@@ -165,8 +158,6 @@ header {
 }
 
 .mid-pause-btn svg { width: 30px; height: 30px; fill: white; }
-
-/* UI Auto-hide Class */
 .ui-hidden { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
 
 .buffering-spinner {
@@ -184,15 +175,45 @@ header {
 
 @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
 
-/* Regulatory select logic */
 #pad-regulator, #aspect-regulator, #quality-regulator { display: none; }
 @media (orientation: landscape) { #pad-regulator, #aspect-regulator, #quality-regulator { display: block; } }
 :fullscreen #pad-regulator, :fullscreen #aspect-regulator, :fullscreen #quality-regulator { display: block; }
 
 .player-infobar { padding: 24px; background: rgba(0,0,0,0.25); }
 #current-ch-name { font-size: 24px; margin-bottom: 4px; color: var(--txt); }
-.ch-meta { font-size: 11px; color: var(--acc); letter-spacing: 2px; opacity: 0.8; }
+.ch-meta { font-size: 11px; color: var(--acc); letter-spacing: 2px; opacity: 0.8; text-transform: uppercase; }
+
 .ch-list-head { padding: 12px 20px; background: var(--surf2); border-bottom: var(--glass-border); font-size: 12px; }
+
+.category-filter {
+  display: flex;
+  gap: 8px;
+  padding: 12px 15px;
+  background: rgba(0,0,0,0.15);
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.category-filter::-webkit-scrollbar { display: none; }
+.cat-btn {
+  background: var(--liquid-glass);
+  border: var(--glass-border);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s;
+  font-family: var(--font-main);
+  font-weight: 700;
+}
+.cat-btn.active {
+  background: var(--acc);
+  color: #fff;
+  border-color: var(--acc);
+  box-shadow: 0 4px 15px rgba(26, 140, 53, 0.3);
+}
+
 .ch-list { overflow-y: auto; max-height: 480px; }
 .ch-list::-webkit-scrollbar { width: 4px; }
 .ch-list::-webkit-scrollbar-thumb { background: var(--acc); border-radius: 10px; }
@@ -202,22 +223,17 @@ header {
 .ch-row-art { width: 60px; height: 40px; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 4px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .ch-row-art img { width: 100%; height: 100%; object-fit: contain; }
 
-/* --- GLASSMORPHISM TAGS --- */
 .ch-tags { display: flex; gap: 6px; margin-top: 6px; }
 .tag {
-  background: var(--liquid-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: var(--glass-stroke);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 8px;
   padding: 2px 8px;
   border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 .active .tag { color: var(--txt); border-color: rgba(26, 140, 53, 0.5); }
-/* -------------------------- */
 
 @media(max-width:1024px) { .live-layout { grid-template-columns: 1fr; } }
 </style>
@@ -240,7 +256,6 @@ header {
             <svg id="pause-icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
           </button>
 
-          <!-- Clappr Container -->
           <div id="clappr-player-container" style="width:100%; height:100%; position:relative;"></div>
           
           <div id="shaka-container" style="display:none; width:100%; height:100%; position:relative;">
@@ -261,99 +276,102 @@ header {
         </div>
         <div class="player-infobar">
           <h2 id="current-ch-name">SELECT_CHANNEL</h2>
-          <p class="ch-meta">Pakistan Super League 2026</p>
+          <p id="current-ch-category" class="ch-meta">LIVE STREAMING</p>
         </div>
       </div>
     </div>
     <div class="channels-section">
       <div class="ch-list-head">LIVE_FEED</div>
+      <div class="category-filter" id="category-bar">
+        <button class="cat-btn active" onclick="filterCategory('All')">ALL</button>
+        <button class="cat-btn" onclick="filterCategory('Pakistan Super League')">PSL</button>
+        <button class="cat-btn" onclick="filterCategory('Indian Premier League')">IPL</button>
+      </div>
       <div class="ch-list" id="channel-list"></div>
     </div>
   </div>
 </div>
 
 <script>
+  /* 
+     CHANNELS SETTINGS:
+     - Use 'player: "hls"' or 'player: "shaka"' to play in the player.
+     - Add 'type: "redirect"' and 'url: "YOUR_URL"' to open in a new web page.
+  */
   const CHANNELS = [
     { 
       id: 1, 
+      category: "Pakistan Super League",
       player: "hls", 
       name: "Worldwide Stream", 
       url: "https://psl.bigbaat.app/out/v1/f342445c31dd475bbf30c7304dbad14f/index.m3u8", 
       key: "null", 
       logo: "https://eapi.pcloud.com/getpubthumb?code=XZnKkvZzlzsJg3FrQLNpWbMc0YmDV3bzWWV&linkpassword=&size=2460x816&crop=0&type=auto",
-      quality: "UPTO 1080p",
-      fps: "25 FPS",
-      vpn: "Worldwide"
+      quality: "UPTO 1080p", fps: "25 FPS", vpn: "Worldwide"
     },
-{ 
+    { 
       id: 2, 
+      category: "Pakistan Super League",
       player: "hls", 
       name: "Tamasha Pro English", 
       url: "https://tencentcdn5.tamashaweb.com/v1/0196159eeff41eb4611d121c76c781/0196159f51bb1ea5064913eb2a83ea/TMSH_U1_WEB.m3u8", 
       key: "null", 
       logo: "https://eapi.pcloud.com/getpubthumb?code=XZe0TAZ4VUePXYN8rSafbQdahHlB5pkov5V&linkpassword=&size=1828x1828&crop=0&type=auto",
-      quality: "UPTO 1080p",
-      fps: "25 FPS",
-      vpn: "PAKISTAN"
+      quality: "UPTO 1080p", fps: "25 FPS", vpn: "PAKISTAN"
     },
-{ 
-      id: 2, 
+    { 
+      id: 3, 
+      category: "Pakistan Super League",
       player: "hls", 
       name: "Tamasha Pro Urdu", 
-      url: "https://alibabacdn11.tamashaweb.com/alibaba11/alibaba11stream_alibaba-11.m3u8?aliyunols=on&lhs_playback_mode=1&lhs_start_unix_s_0=1775486400", 
+      url: "https://cdn6aws.tamashaweb.com/out/v1/33441d8e8a3d4c289551e3fa151d5082/index.m3u8?start=1775652000", 
       key: "null", 
       logo: "https://eapi.pcloud.com/getpubthumb?code=XZe0TAZ4VUePXYN8rSafbQdahHlB5pkov5V&linkpassword=&size=1828x1828&crop=0&type=auto",
-      quality: "UPTO 1080p",
-      fps: "25 FPS",
-      vpn: "PAKISTAN"
+      quality: "UPTO 1080p", fps: "25 FPS", vpn: "PAKISTAN"
     },
-{ 
-      id: 2, 
-      player: "clappr", 
+    { 
+      id: 4, 
+      category: "Pakistan Super League",
+      player: "hls", 
       name: "Ten Sports", 
-      url: "http://110.93.227.220:8080/live/Amin-Sb-zamel/Amin-Sb/2074.m3u8", 
+      url: "https://tapmadlive.akamaized.net/tapmadold/tensports.smil/playlist.m3u8", 
       key: "null", 
       logo: "https://eapi.pcloud.com/getpubthumb?code=XZbQSwZsoPpvwKp48bVzqA3dWFkzJi7ybLX&linkpassword=undefined&size=1000x219&crop=0&type=auto",
-      quality: "UPTO 720p",
-      fps: "25 FPS",
-      vpn: "PAKISTAN"
+      quality: "UPTO 720p", fps: "25 FPS", vpn: "PAKISTAN"
     },
-{ 
-      id: 2, 
+    { 
+      id: 5, 
+      category: "Pakistan Super League",
       player: "shaka", 
       name: "ESPN", 
       url: "https://live1-761f422bb93edb7b.fastly.foxtelgroupcdn.net.au/out/v1/adbaa04bfe5441199a037b7a78e6e62a/index.mpd", 
       key: "4fd27d05c1bd43e88496c9c89770faaf:1b53ff84f9fefe4266920ec38376b9c1", 
       logo: "https://images.channel5.eu/eGqxKQFYBvdaZ1gtJTHXn44tRBP25APwLvpWnRekeFAXNlW_IDQrMCNYX5qnzdAnRGfyyRXO6YRnV9j-sk3wOg.png",
-      quality: "UPTO 1080p",
-      fps: "50 FPS",
-      vpn: "AUS VPN"
+      quality: "UPTO 1080p", fps: "50 FPS", vpn: "AUS VPN"
     },
-{ 
-      id: 2, 
-      player: "shaka", 
-      name: "ESPN 2", 
-      url: "https://live1-814bffb9b389f652-cf.foxtelgroupcdn.net.au/out/v1/4a34a24349314cc3a1e84ee31bf3d224/index.mpd", 
-      key: "ad04e6d2bdb54dc2a35237ab66e0f29e:78d37cc16c351190ed202758adf417f3", 
-      logo: "https://images.channel5.eu/eGqxKQFYBvdaZ1gtJTHXn44tRBP25APwLvpWnRekeFAXNlW_IDQrMCNYX5qnzdAnRGfyyRXO6YRnV9j-sk3wOg.png",
-      quality: "UPTO 1080p",
-      fps: "50 FPS",
-      vpn: "AUS VPN"
-},
-{ 
-      id: 2, 
-      player: "shaka", 
-      name: "Sky Sports NZ 1", 
-      url: "https://dice-live-oc.akamaized.net/hdntl=exp=1775658723~acl=%2f*~id=2ebd2182-efd9-4d81-bd25-8aa45654f569~data=hdntl,aXA9MzguMTM3LjM2LjExOCZleHA9MTc3NTU3MjM1MiZlaWQ9ODM3OTE3Jm9pZD0yMiZ0eXBlPVZPRCZ1aWQ9bnVsbCZjaWQ9bnVsbCZwdD1udWxs~hmac=a3db4a1c4c87246c83617fbe96b8046245fe63b30666489571ef828e091f43da/dash/live/2093749/219026-314033/manifest-d.mpd", 
-      key: "aefc2c8d1c8840f1b6981f856c9269ba:cf8ea114c45b4d6596b2748258ab74d6", 
-      logo: "null",
-      quality: "UPTO 1080p",
-      fps: "50 FPS",
-      vpn: "Worldwide"
-}
+{
+      id: 6,
+      category: "Indian Premier League",
+      type: "redirect",
+      name: "Sky Sports Cricket",
+      url: "http://line.trxdnscloud.ru:80/play/live.php?mac=00:1A:79:A3:BE:B0&stream=1905864&extension=m3u8", 
+      logo: "https://images.channel5.eu/eGqxKQFYBvdaZ1gtJTHXn2iyNzKkWyCaVtDGlW13Af1t0jZW2ad8Cku7gDOclMphRZLGfTxvcfu4ICS_3k0Q5w.png",
+      quality: "1080p", fps: "50 FPS", vpn: "Worldwide"
+    },
+    { 
+      id: 7, 
+      category: "Pakistan Super League",
+      type: "redirect", 
+      name: "CricBuzz 2", 
+      url: "http://line.trxdnscloud.ru:80/play/live.php?mac=00:1A:79:A3:BE:B0&stream=1109345&extension=m3u8", 
+      logo: "https://eapi.pcloud.com/getpubthumb?code=XZU0xKZ4ji5BkAs5rSuAFxyluOKfJEmnrkX&linkpassword=&size=850x276&crop=0&type=auto",
+      quality: "720p/1080p", fps: "25", vpn: "Worldwide"
+    }
   ];
 
   let clapprPlayer, shakaInstance, shakaVideo, uiTimer, hlsInstance;
+  let activeCategory = "All";
+  let activeChannelIndex = 0;
 
   function togglePlayPause() {
     const isGeneric = document.getElementById('shaka-container').style.display !== 'none';
@@ -441,12 +459,10 @@ header {
       chromeless: true,
       playback: {
         hlsjsConfig: {
-          // FAST START CONFIG
           enableLowLatencyMode: true,
-          initialLiveManifestSize: 1, // Start as soon as 1 segment is found
-          liveSyncDurationCount: 2,   // Sync very close to the live edge
-          // NORMAL BUFFER CONFIG (once playing)
-          maxBufferLength: 30,        // Allows buffer to grow to 30s for stability
+          initialLiveManifestSize: 1,
+          liveSyncDurationCount: 2,
+          maxBufferLength: 30,
           maxMaxBufferLength: 60,
           lowLatencyMode: true
         }
@@ -462,11 +478,10 @@ header {
     shakaVideo = document.getElementById('shaka-video');
     shakaInstance = new shaka.Player(shakaVideo);
     
-    // Shaka optimization for fast loading
     shakaInstance.configure({
       streaming: {
-        bufferingGoal: 30,           // Build a 30s buffer
-        rebufferingGoal: 0.5,        // Resume playback with only 0.5s of data
+        bufferingGoal: 30,
+        rebufferingGoal: 0.5,
         bufferBehind: 30,
         lowLatencyMode: true
       }
@@ -544,8 +559,24 @@ header {
     });
   }
 
+  function filterCategory(cat) {
+    activeCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.innerText === (cat === 'Pakistan Super League' ? 'PSL' : cat === 'Indian Premier League' ? 'IPL' : 'ALL'));
+    });
+    renderChannels();
+  }
+
   async function selectChannel(index) {
     const ch = CHANNELS[index];
+    
+    // REDIRECT OPTION: If channel type is redirect, open in new page and stop
+    if (ch.type === "redirect") {
+      window.open(ch.url, '_blank');
+      return;
+    }
+
+    activeChannelIndex = index;
     const clapprWrapper = document.getElementById('clappr-player-container');
     const shakaWrapper = document.getElementById('shaka-container');
     const qualitySelect = document.getElementById('quality-regulator');
@@ -560,11 +591,10 @@ header {
       
       if (ch.player === "hls" && Hls.isSupported()) {
           hlsInstance = new Hls({
-              // Optimized for Instant Loading
               enableLowLatencyMode: true,
               initialLiveManifestSize: 1, 
-              liveSyncDuration: 2,         // Start within 2 seconds of live edge
-              maxBufferLength: 30,        // Build a strong 30s buffer once running
+              liveSyncDuration: 2,
+              maxBufferLength: 30,
               maxMaxBufferLength: 45,
               fragLoadingMaxRetry: 10,
               manifestLoadingMaxRetry: 10
@@ -604,29 +634,44 @@ header {
       clapprPlayer.play();
     }
     document.getElementById('current-ch-name').innerText = ch.name;
-    document.querySelectorAll('.ch-row').forEach((el, i) => el.classList.toggle('active', i === index));
+    document.getElementById('current-ch-category').innerText = ch.category;
+    
+    renderChannels();
     resetTimer();
   }
 
   function renderChannels() {
-    document.getElementById('channel-list').innerHTML = CHANNELS.map((ch, index) => `
-      <div class="ch-row" onclick="selectChannel(${index})">
-        <div class="ch-row-art"><img src="${ch.logo}"></div>
-        <div class="ch-info" style="flex-grow:1;">
-          <div class="ch-name" style="font-size:14px; margin-bottom: 2px;">${ch.name}</div>
-          <div class="ch-tags">
-            <span class="tag">${ch.quality || '1080P'}</span>
-            <span class="tag">${ch.fps || '60 FPS'}</span>
+    const list = document.getElementById('channel-list');
+    list.innerHTML = "";
     
-            <span class="tag">${ch.vpn || 'GLOBAL'}</span>
-          </div>
-        </div>
-      </div>`).join('');
+    CHANNELS.forEach((ch, index) => {
+      if (activeCategory === "All" || ch.category === activeCategory) {
+        const row = document.createElement('div');
+        // Only mark active if it's the currently playing non-redirect channel
+        const isActive = (index === activeChannelIndex && ch.type !== 'redirect');
+        row.className = `ch-row ${isActive ? 'active' : ''}`;
+        row.onclick = () => selectChannel(index);
+        
+        // Show a "LINK" tag if it redirects
+        const qualityTag = ch.type === 'redirect' ? '🔗 EXTERNAL' : (ch.quality || '1080P');
+        const tagColor = ch.type === 'redirect' ? 'style="color:var(--acc2); border-color:var(--acc2);"' : '';
+
+        row.innerHTML = `
+          <div class="ch-row-art"><img src="${ch.logo}"></div>
+          <div class="ch-info" style="flex-grow:1;">
+            <div class="ch-name" style="font-size:14px; margin-bottom: 2px;">${ch.name}</div>
+            <div class="ch-tags">
+              <span class="tag" ${tagColor}>${qualityTag}</span>
+              <span class="tag">${ch.fps || '60 FPS'}</span>
+              <span class="tag">${ch.vpn || 'GLOBAL'}</span>
+            </div>
+          </div>`;
+        list.appendChild(row);
+      }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', initPlayer);
-</script>
-
 </script>
 </body>
 </html>
